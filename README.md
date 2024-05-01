@@ -28,7 +28,7 @@ The Mount
 
 The mount was designed in TinkerCAD, as it has models for SG90 servos and for 608ZZ bearings (one is used in this design).   STL files for the design are included in this repository.
 
-[AltAz2_2](AltAz2_2.png)
+[AltAz2_2](/docs/AltAz2_2.png)
 
 The mount design is minimalist: the 1X cog is part of the platform with the Altitude servo which sits inside the 608ZZ bearing in the base, and the 2X cog sits on the Azimuth SG90 servo.  This provides a 1:2 gear ratio for the Azimuth so that we can cover a full 360 degrees.  A Sun or Moon disk is attached to the servo arm, or an ESP-CAM sits inside a case attached to the servo arm.
 
@@ -279,5 +279,5 @@ interval:
 
 And that's it!  Now you can spend hours watching the sun and moon models move.  Next up: integrating two Sun and Moon trackers into a single object to provide a full Earth-Moon-Sun Tellurion.
 
-[3DHorizoncard](3DHorizonCard.jpg)
-[AltAz2](AltAz2.jpg)
+[3DHorizoncard](/docs/3DHorizonCard.jpg)
+[AltAz2](/docs/AltAz2.jpg)
