@@ -10,7 +10,6 @@ substitutions:
   my_timezone: "America/Toronto"
 
   # pin assignments
-  led_green: GPIO23
   display_sda: GPIO27
   display_scl: GPIO26
   servo_azimuth: GPIO19
@@ -32,10 +31,6 @@ logger:
 
 # Enable startup debug info
 debug:
-
-# web server: use if not using api:
-# web_server:
-#   version: 2
   
 # Enable Home Assistant API
 # Required if using homeassistant time server
@@ -53,20 +48,9 @@ wifi:
     # and the Sun is above the horizon
     - light.turn_on: green_led
   
-#  use_address: espnode4.local
-
-  # Optional manual IP
-  manual_ip:
-    static_ip: 192.168.0.104
-    gateway: 192.168.0.1
-    subnet: 255.255.255.0
-    # Use Cloudflare DNS servers (required if using sntp time server)
-    # dns1: 1.1.1.1
-    # dns2: 1.0.0.1
-
   # Enable fallback hotspot (captive portal) in case wifi connection fails
   ap:
-    ssid: espnode4
+    ssid: $nodename
     password: !secret wifi_password
 
 captive_portal:
@@ -74,20 +58,6 @@ captive_portal:
 binary_sensor:
   - platform: status
     name: Status
-
-light:
-  # Status LED shares the blue led between status and an addressable light
-  # flashes when there is a warning or error on startup
-  - platform: status_led
-    name: Blue LED
-    id: blue_led
-    pin: GPIO2
-
-  # green LED
-  - platform: binary
-    name: "Green LED"
-    id: green_led
-    output: led_1
 
 button:
   - platform: restart
@@ -103,11 +73,9 @@ sun:
   on_sunrise:
     - then:
         - logger.log: Sunrise!
-        - light.turn_on: green_led
   on_sunset:
     - then:
         - logger.log: Sunset!
-        - light.turn_off: green_led
         - number.set:
             id: number_azimuth
             value: 180
@@ -119,9 +87,6 @@ sun:
 time:
   - platform: homeassistant
     id: ha_time
-  # - platform: sntp
-  #   id: sntp_time
-  #   timezone: ${my_timezone}
     
 number:
   # Define a number template to control servo 1
@@ -130,7 +95,6 @@ number:
     name: Azimuth Number
     id: number_azimuth
     optimistic: True
-#    internal: True
     mode: slider
     min_value: 0
     initial_value: 180
@@ -138,21 +102,7 @@ number:
     step: 0.1
     set_action:
       then:
-        # First write the angle+30 or angle-30, wait, then come back to the angle
-        # This increases the accuracy of the servo position
-        - if:
-            condition:
-              lambda: 'return x < 180;'
-            then:
-              - servo.write:
-                  id: servo_azimuth
-                  level: !lambda 'return (((x + 30)/ 360.0)* 2.0) - 1.0;'
-            else:
-              - servo.write:
-                  id: servo_azimuth
-                  level: !lambda 'return (((x - 30)/ 360.0)* 2.0) - 1.0;'
-        - delay: 500ms
-        - servo.write:
+       - servo.write:
             id: servo_azimuth
             level: !lambda 'return ((x / 360.0)* 2.0) - 1.0;'
 
@@ -162,7 +112,6 @@ number:
     name: Altitude Number
     id: number_altitude
     optimistic: true
-#    internal: True
     mode: slider
     min_value: 0
     initial_value: 0
@@ -170,10 +119,6 @@ number:
     step: 0.1
     set_action:
       then:
-        - servo.write:
-            id: servo_altitude
-            level: !lambda 'return -(x+30) / 90.0;'
-        - delay: 500ms
         - servo.write:
             id: servo_altitude
             level: !lambda 'return -x / 90.0;'
@@ -202,13 +147,6 @@ i2c:
     frequency: 400kHz
 
 output:
-  # ledc PWM output for an LED
-  - platform: ledc
-    pin: ${led_green}
-    id: led_1
-    channel: 6
-    frequency: "1000Hz"
-
   # Servo output 1   
   - platform: ledc
     pin: ${servo_azimuth}

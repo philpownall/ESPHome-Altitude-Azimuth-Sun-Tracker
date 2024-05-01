@@ -280,3 +280,16 @@ interval:
 And that's it!  Now you can spend hours watching the sun and moon models move.  Next up: integrating two Sun and Moon trackers into a single object to provide a full Earth-Moon-Sun Tellurion.
 
 [AltAz2](/docs/AltAz2.jpg)
+
+Customization Instructions for the ESPHome yaml
+===============================================
+
+1. Replace the nodename with your ESPHome node name
+2. Enter the Latitude, Longitude, and Timezone of your location as indicated.
+3. Either use the indicated pins for your servo motors and display, or modify as needed.
+4. Modify the esp32 board type to your board type.
+5. Fill in your OTA password if you have set one
+6. Enter your *wifi_ssid* and *wifi_password* into your secrets.yaml file
+7. Install the yaml file using ESPHome Dashboard
+
+
