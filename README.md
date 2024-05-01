@@ -1,9 +1,8 @@
 # ESPHome Altitude Azimuth Sun Tracker
- Inspired by the wonderful Horizon card for HACS, and the multi-cog designs for Alt-Azimuth telescope mounts and Tellurions (Earth-Sun-Moon animated toys), this project builds a real-life 3D Horizon Card to track the Sun using ESPHome and an Altitude-Azimuth mount.
+ Inspired by the wonderful Horizon card for HACS, and the multi-cog designs for Alt-Azimuth telescope mounts, this project builds a real-life 3D Horizon Card to track the Sun using ESPHome, SG90 servos and an Altitude-Azimuth mount.
 
 Sun Altitude-Azimuth Tracking with SG90 servos and ESPHome
 ===============================================================
-by Phil Pownall
 
 ### Ingredients
 - An ESP32 module
@@ -27,8 +26,7 @@ by Phil Pownall
 The Mount
 ---------
 
-The mount was designed in TinkerCAD, as it has models for SG90 servos and for 608ZZ bearings (one is used in this design).   STL files for the design are available in Tinkercad thing 
-[AltAzimuthMount](//www.tinkercad.com/things/iezULSBmK4e-altitude-azimuth-mount-for-espcam)
+The mount was designed in TinkerCAD, as it has models for SG90 servos and for 608ZZ bearings (one is used in this design).   STL files for the design are included in this repository.
 
 [AltAz2_2](AltAz2_2.png)
 
