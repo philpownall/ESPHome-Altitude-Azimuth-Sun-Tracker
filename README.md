@@ -34,7 +34,7 @@ The mount was designed in TinkerCAD, as it has models for SG90 servos and for 60
 
 The mount design is minimalist: the 1X cog is part of the platform with the Altitude servo which sits inside the 608ZZ bearing in the base, and the 2X cog sits on the Azimuth SG90 servo.  This provides a 1:2 gear ratio for the Azimuth so that we can cover a full 360 degrees.  A Sun or Moon disk is attached to the servo arm, or an ESP-CAM sits inside a case attached to the servo arm.
 
-Since we do not have a curved display to show the Sunrise/Sunset values, we use an SSD1306 OLED display showing 3 pages: one for the Sunrise time, one for the current Sun position, and one for the Sunset time.  Attractive mdi icons for the Sunrise/Sun/Sunset are also shown on the display.
+Since we do not have a curved display to show the Sunrise/Sunset values, we use an SSD1306 OLED display showing 4 pages: one for the Sunrise time, two for the current Sun Altitude and Azimuth, and one for the Sunset time.  Attractive mdi icons for the Sunrise/Sun/Sunset are also shown on the display.
 
 
 The ESPHome code
@@ -88,7 +88,7 @@ number:
             level: !lambda 'return -x / 90.0;'
 ```
 
-Note the modification of the usual servo control number definitions to provide a 1:1 mapping between the Sun Azimuth and Elevation (Altitude) sensors and the servo control numbers.  The Azimuth servo number template thus varies from 0 to 360 (because we have a 1:2 gear attached to it), and the Altitude servo number template varies from 0 to 90.  We track the Sun if it is above the horizon, so the position of the platform will swing back around to the Sunrise value every morning.
+Note the modification of the usual servo control number definitions to provide a 1:1 mapping between the Sun Azimuth and Elevation (Altitude) sensors and the servo control numbers.  The Azimuth servo number template thus varies from 0 to 360 (because we have a 1:2 gear cog attached to it), and the Altitude servo number template varies from 0 to 90.  We track the Sun if it is above the horizon, so the position of the platform will swing back around to the Sunrise position every morning.
 
 Servo Definitions
 -----------------
