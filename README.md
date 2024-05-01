@@ -279,5 +279,4 @@ interval:
 
 And that's it!  Now you can spend hours watching the sun and moon models move.  Next up: integrating two Sun and Moon trackers into a single object to provide a full Earth-Moon-Sun Tellurion.
 
-[3DHorizoncard](/docs/3DHorizonCard.jpg)
 [AltAz2](/docs/AltAz2.jpg)
