@@ -1,0 +1,323 @@
+# 
+# Altitude-Azimuth tracker
+#
+
+substitutions:
+  nodename: espnode4
+  # Enter the latitude and longitude of your location here
+  my_latitude: "44.2333°"
+  my_longitude: "-76.4810°"
+  my_timezone: "America/Toronto"
+
+  # pin assignments
+  led_green: GPIO23
+  display_sda: GPIO27
+  display_scl: GPIO26
+  servo_azimuth: GPIO19
+  servo_altitude: GPIO21
+
+esphome:
+  name: $nodename
+  friendly_name: $nodename
+
+esp32:
+  board: nodemcu-32s
+  framework:
+    type: arduino
+
+# Enable logging
+logger:
+#  level: error
+  level: warn
+
+# Enable startup debug info
+debug:
+
+# web server: use if not using api:
+# web_server:
+#   version: 2
+  
+# Enable Home Assistant API
+# Required if using homeassistant time server
+api:
+
+ota:
+  password: ""
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  id: wifi_id
+  on_connect:
+    # the green LED indicates that the node is connected to the WiFI SSID
+    # and the Sun is above the horizon
+    - light.turn_on: green_led
+  
+#  use_address: espnode4.local
+
+  # Optional manual IP
+  manual_ip:
+    static_ip: 192.168.0.104
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    # Use Cloudflare DNS servers (required if using sntp time server)
+    # dns1: 1.1.1.1
+    # dns2: 1.0.0.1
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: espnode4
+    password: !secret wifi_password
+
+captive_portal:
+
+binary_sensor:
+  - platform: status
+    name: Status
+
+light:
+  # Status LED shares the blue led between status and an addressable light
+  # flashes when there is a warning or error on startup
+  - platform: status_led
+    name: Blue LED
+    id: blue_led
+    pin: GPIO2
+
+  # green LED
+  - platform: binary
+    name: "Green LED"
+    id: green_led
+    output: led_1
+
+button:
+  - platform: restart
+    name: Restart
+
+  - platform: shutdown
+    name: shutdown
+
+# Track the sun for my location
+sun:
+  latitude: ${my_latitude}
+  longitude: ${my_longitude}
+  on_sunrise:
+    - then:
+        - logger.log: Sunrise!
+        - light.turn_on: green_led
+  on_sunset:
+    - then:
+        - logger.log: Sunset!
+        - light.turn_off: green_led
+        - number.set:
+            id: number_azimuth
+            value: 180
+        - number.set:
+            id: number_altitude
+            value: 0
+
+# At least one time source is required
+time:
+  - platform: homeassistant
+    id: ha_time
+  # - platform: sntp
+  #   id: sntp_time
+  #   timezone: ${my_timezone}
+    
+number:
+  # Define a number template to control servo 1
+  # servo 1 is azimuth: 0 to 360: map to -1 to +1
+  - platform: template
+    name: Azimuth Number
+    id: number_azimuth
+    optimistic: True
+#    internal: True
+    mode: slider
+    min_value: 0
+    initial_value: 180
+    max_value: 360
+    step: 0.1
+    set_action:
+      then:
+        # First write the angle+30 or angle-30, wait, then come back to the angle
+        # This increases the accuracy of the servo position
+        - if:
+            condition:
+              lambda: 'return x < 180;'
+            then:
+              - servo.write:
+                  id: servo_azimuth
+                  level: !lambda 'return (((x + 30)/ 360.0)* 2.0) - 1.0;'
+            else:
+              - servo.write:
+                  id: servo_azimuth
+                  level: !lambda 'return (((x - 30)/ 360.0)* 2.0) - 1.0;'
+        - delay: 500ms
+        - servo.write:
+            id: servo_azimuth
+            level: !lambda 'return ((x / 360.0)* 2.0) - 1.0;'
+
+  # Define a number template to control servo 2
+  # servo 2 is altitude: 0 to 90: map to 0 to -1
+  - platform: template
+    name: Altitude Number
+    id: number_altitude
+    optimistic: true
+#    internal: True
+    mode: slider
+    min_value: 0
+    initial_value: 0
+    max_value: 90
+    step: 0.1
+    set_action:
+      then:
+        - servo.write:
+            id: servo_altitude
+            level: !lambda 'return -(x+30) / 90.0;'
+        - delay: 500ms
+        - servo.write:
+            id: servo_altitude
+            level: !lambda 'return -x / 90.0;'
+
+sensor:
+  - platform: sun
+    name: Sun Altitude
+    id: sun_altitude
+    type: elevation
+
+  - platform: sun
+    name: Sun Azimuth
+    id: sun_azimuth
+    type: azimuth
+
+  - platform: internal_temperature
+    name: CPU Temperature
+    update_interval: 5min
+
+i2c:
+  # define an I2C bus for the SSD1306 display
+  - id: bus_b
+    sda: ${display_sda}
+    scl: ${display_scl}
+    scan: True
+    frequency: 400kHz
+
+output:
+  # ledc PWM output for an LED
+  - platform: ledc
+    pin: ${led_green}
+    id: led_1
+    channel: 6
+    frequency: "1000Hz"
+
+  # Servo output 1   
+  - platform: ledc
+    pin: ${servo_azimuth}
+    id: ledc_1
+    channel: 0
+    frequency: 50 Hz
+
+  # Servo output 2
+  - platform: ledc
+    pin: ${servo_altitude}
+    id: ledc_2
+    channel: 1
+    frequency: 50 Hz
+
+servo:
+    # servo 1
+  - id: servo_azimuth
+    output: ledc_1
+    auto_detach_time: 1s
+    transition_length: 8s
+
+    # servo 2
+  - id: servo_altitude
+    output: ledc_2
+    auto_detach_time: 1s
+    transition_length: 8s
+
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: IP Address
+
+  - platform: sun
+    name: Sun Next Sunrise
+    id: sunrise_text
+    type: sunrise
+    format: "%I:%M %p"
+
+  - platform: sun
+    name: Sun Next Sunset
+    id: sunset_text
+    type: sunset
+    format: "%I:%M %p"
+
+font:
+  # some fonts for the display
+  - file: 'fonts/arial.ttf'
+    id: font1
+    size: 20
+
+  - file: 'fonts/materialdesignicons-webfont.ttf'
+    id: icons
+    size: 44
+    glyphs: [
+        "󰖙", # sun
+        "󱦥", # sun-compass
+        "󱬨", # sun-angle-outline
+        "󰖜", # sunrise
+        "󰖚" # weather-sunset
+     ]
+
+display:
+  - platform: ssd1306_i2c
+    model: "SSD1306 128x64"
+    reset_pin: GPIO25 # an unused pin
+    address: 0x3C
+    id: my_display
+    flip_x: True
+    flip_y: True
+    pages:
+      - id: page1
+        lambda: |-
+          it.print(90, 5, id(icons), "󰖜");
+          it.print(15, 24, id(font1), "Sunrise");
+          it.printf(5, 44, id(font1), "%s", id(sunrise_text).state.c_str());
+      - id: page2
+        lambda: |-
+          it.print(90, 0, id(icons), "󱬨");
+          it.print(10, 24, id(font1), "Altitude");
+          it.printf(10, 44, id(font1), "%.0f°", id(sun_altitude).state);
+      - id: page3
+        lambda: |-
+          it.print(90, 0, id(icons), "󱦥");
+          it.print(10, 24, id(font1), "Azimuth");
+          it.printf(10, 44, id(font1), "%.0f°", id(sun_azimuth).state);
+      - id: page4
+        lambda: |-
+          it.print(90, 5, id(icons), "󰖚");
+          it.print(15, 24, id(font1), "Sunset");
+          it.printf(5, 44, id(font1), "%s", id(sunset_text).state.c_str());
+
+interval:
+  # update the display page every 15 seconds
+  - interval: 15s
+    then:
+      - display.page.show_next: my_display
+      - component.update: my_display
+  
+  # update the servo motors every 5 minutes
+  - interval: 300s
+    then:
+      - if:
+          condition:
+            - sun.is_above_horizon:
+          then:
+            # - logger.log: Sun is above horizon!
+            - number.set:
+                id: number_azimuth
+                value: !lambda 'return id(sun_azimuth).state ;'
+            - number.set:
+                id: number_altitude
+                value: !lambda 'return id(sun_altitude).state ;'
