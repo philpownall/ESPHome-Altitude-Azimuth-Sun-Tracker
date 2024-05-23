@@ -273,3 +273,62 @@ And that's it!  Now you can spend hours watching the sun and moon models move.  
 
 [3DHorizoncard](SunMoonHorizon3D.jpg)
 [AltAz2](AltAz2.jpg)
+
+
+Using the Sun Tracker without Home Assistant
+============================================
+
+The Sun Tracker can be used without Home Assistant (using only ESPHome).  This requires the following modifications to the device yaml:
+
+- Enter your timezone in the substitutions (for use by the sntp time platform)
+```
+substitutions:
+  my_timezone: "America/Toronto"
+```
+
+- add the sntp time source:
+```
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${my_timezone}
+```
+
+- comment out the *api:* line
+```
+# api:
+```
+
+- Add the webserver v2 (Your nodename will be *$nodename.local*)
+```
+# web server: use if not using api:
+web_server:
+  version: 2
+```
+
+- Specify an ntp time source and a dns server (e.g. Cloudflare) with your static IP address
+```
+# At least one time source is required
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${my_timezone}
+
+wifi:
+  manual_ip:
+    static_ip: 192.168.0.104
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    # Use Cloudflare DNS servers (required if using sntp time server)
+    dns1: 1.1.1.1
+    dns2: 1.0.0.1
+
+```
+
+- Use a log level of *WARN* so that your can see the Azimuth/Altitude updating on the node web page
+```
+# Enable logging
+logger:
+  level: warn
+```
+

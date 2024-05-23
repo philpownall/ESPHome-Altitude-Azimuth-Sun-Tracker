@@ -228,4 +228,57 @@ sensor:
 <p>And that&#39;s it!  Now you can spend hours watching the sun and moon models move.  Next up: integrating two Sun and Moon trackers into a single object to provide a full Earth-Moon-Sun Tellurion.</p>
 <p><a href="SunMoonHorizon3D.jpg">3DHorizoncard</a>
 <a href="AltAz2.jpg">AltAz2</a></p>
+<h1 id="using-the-sun-tracker-without-home-assistant">Using the Sun Tracker without Home Assistant</h1>
+<p>The Sun Tracker can be used without Home Assistant (using only ESPHome).  This requires the following modifications to the device yaml:</p>
+<ul>
+<li>Enter your timezone in the substitutions (for use by the sntp time platform)</li>
+</ul>
+<pre><code>substitutions:
+  my_timezone: &quot;America/Toronto&quot;
+</code></pre>
+<ul>
+<li>add the sntp time source:</li>
+</ul>
+<pre><code>time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${my_timezone}
+</code></pre>
+<ul>
+<li>comment out the <em>api:</em> line</li>
+</ul>
+<pre><code># api:
+</code></pre>
+<ul>
+<li>Add the webserver v2 (Your nodename will be <em>$nodename.local</em>)</li>
+</ul>
+<pre><code># web server: use if not using api:
+web_server:
+  version: 2
+</code></pre>
+<ul>
+<li>Specify an ntp time source and a dns server (e.g. Cloudflare) with your static IP address</li>
+</ul>
+<pre><code># At least one time source is required
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: ${my_timezone}
+
+wifi:
+  manual_ip:
+    static_ip: 192.168.0.104
+    gateway: 192.168.0.1
+    subnet: 255.255.255.0
+    # Use Cloudflare DNS servers (required if using sntp time server)
+    dns1: 1.1.1.1
+    dns2: 1.0.0.1
+</code></pre>
+<ul>
+<li>Use a log level of <em>WARN</em> so that your can see the Azimuth/Altitude updating on the node web page</li>
+</ul>
+<pre><code># Enable logging
+logger:
+  level: warn
+</code></pre>
 
